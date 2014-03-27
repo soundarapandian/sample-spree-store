@@ -1,0 +1,4 @@
+<!-- replace 'h6' -->
+<h6 class='taxonomy-root'>
+  <%= Spree.t(:shop_by_taxonomy, :taxonomy => taxonomy.name) %> <span class="arrow up filter-collapse"></span>
+</h6>

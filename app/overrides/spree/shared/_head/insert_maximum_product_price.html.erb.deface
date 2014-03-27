@@ -1,0 +1,9 @@
+<!-- insert_after 'erb[loud]:contains("csrf_meta_tags")' -->
+
+<script type="text/javascript">
+  var myStore = myStore || {};
+
+  myStore.minimum_product_price = <%= params[:price] && params[:price][:min].to_f || Spree::Price.minimum(:amount).to_f %>;
+  myStore.maximum_product_price = <%= params[:price] && params[:price][:max].to_f || Spree::Price.maximum(:amount).to_f %>;
+
+</script>

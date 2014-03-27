@@ -1,0 +1,4 @@
+<% @products.in_groups_of(3, false).each do |product_row| %>
+  <%= render 'spree/shared/product_row', product_row: product_row %>
+<% end %>
+<% reset_cycle("classes") %>
