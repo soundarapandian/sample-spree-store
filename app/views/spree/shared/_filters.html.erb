@@ -3,7 +3,8 @@
 
   <h6 class="filter-title">Price Range <span class="arrow up filter-collapse"></span></h6>
   <div id="price">
-    <div class="price-range"></div>
+    <div class="price-range" data-max-price="<%= maximum_product_price %>" data-min-price="<%= minimum_product_price %>"
+      data-start-price="<%= starting_product_price %>" data-end-price="<%= ending_product_price %>"></div>
     <div class="price-min">
       Min($): <input type="text" name="price[min]" id="min-price" class="price-min">
     </div>

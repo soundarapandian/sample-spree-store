@@ -1,27 +1,62 @@
 $(document).ready(function() {
-  var state = 0;
-  var Link = $.noUiSlider.Link;
+  var toggleLoader, setupFilters, filterProducts,
+      state = 0,
+      Link  = $.noUiSlider.Link;
 
-  var toggleLoader = function() {
+  toggleLoader = function() {
     $('#overlay-with-spinner').toggle();
   };
 
-  // Price slider filter
-  var maximumPrice = myStore.maximum_product_price || 1000;
-  var minimumPrice = myStore.minimum_product_price || 1;
-  var setupFilters = function() {
-    $('#sidebar input[type="checkbox"], #sidebar input[type="radio"]').iCheck({
+  filterProducts = function() {
+    var input = $(this);
+    var path = window.location.pathname;
+    var queryString = input.attr('type') == 'radio' ? 'scope=filters&primary_taxon_id='+input.val() : $('#sidebar_products_search').serialize()+'&scope=filters';
+    var fullPath = path + '?' + queryString;
+    var contentContainer = $('#wrapper');
+
+    $.ajax({
+      url: fullPath,
+      beforeSend: toggleLoader
+    })
+      .done(function(html) {
+        state += 1;
+
+        $('html, body').animate({
+          scrollTop: $('#subheader').offset().top
+        }, 500, function() {
+          contentContainer.replaceWith(html);
+          setupFilters();
+          History.pushState({state: state}, 'state '+state, '?'+queryString);
+        });
+      })
+      .fail(function() {
+        contentContainer.html('Oops! something went wrong. Please try again')
+      }).always(toggleLoader);
+  };
+
+  setupFilters = function() {
+    var checkBoxFilters = $('#sidebar input[type="checkbox"]');
+    var radioButtonFilters = $('#sidebar input[type="radio"]');
+    var priceRange = $('#price .price-range');
+    var startPrice = parseInt(priceRange.data('start-price'));
+    var endPrice =  parseInt(priceRange.data('end-price'));
+    var maximumPrice = parseInt(priceRange.data('max-price'));
+    var minimumPrice = parseInt(priceRange.data('min-price'));
+    var minPriceInput = $('#min-price');
+    var maxPriceInput = $('#max-price');
+
+    $('#sidebar').iCheck({
       cursor: true,
       checkboxClass: 'icheckbox_square-blue',
       radioClass: 'iradio_square-blue'
     });
 
-    $('#sidebar input[type="checkbox"]').on('ifChanged', filterProducts);
+    checkBoxFilters.on('ifChanged', filterProducts);
 
-    $('#sidebar input[type="radio"]').on('ifChecked', filterProducts);
+    radioButtonFilters.on('ifChecked', filterProducts);
 
-    $('#price .price-range').noUiSlider({
-      start: [minimumPrice, maximumPrice],
+    priceRange.noUiSlider({
+      start: [startPrice, endPrice],
       connect: true,
       range: {
         min: minimumPrice,
@@ -29,10 +64,10 @@ $(document).ready(function() {
       },
       serialization: {
         lower: [new Link({
-          target: $('#min-price')
+          target: minPriceInput
         })],
         upper: [new Link({
-          target: $('#max-price')
+          target: maxPriceInput
         })],
         format: {
           decimals: 0
@@ -40,21 +75,21 @@ $(document).ready(function() {
       }
     });
 
-    $('#price .price-range').on('set', filterProducts);
+    priceRange.on('set', filterProducts);
 
-    $('#min-price').unbind();
-    $('#max-price').unbind();
+    minPriceInput.unbind();
+    maxPriceInput.unbind();
 
     $('#min-price, #max-price').on('blur', function() {
       var minPrice = $('#min-price').val();
       var maxPrice = $('#max-price').val();
 
-      $('#price .price-range').val([minPrice, maxPrice], {set: true, animate: true});
+      priceRange.val([minPrice, maxPrice], {set: true, animate: true});
     });
 
     // Custom scrollbar
-    $('#sidebar .filter_choices').mCustomScrollbar({
-      theme: "dark-thick"
+    $('.filter_choices').mCustomScrollbar({
+      theme: 'dark-thick'
     });
 
     // Filter collapse
@@ -67,33 +102,6 @@ $(document).ready(function() {
        arrow.toggleClass('down');
      });
    }); 
-  };
-
-
-  var filterProducts = function() {
-    var path = window.location.pathname;
-    var queryString = $('#sidebar_products_search').serialize()+'&scope=filters';
-    var fullPath = path + '?' + queryString;
-    var contentContainer = $('#wrapper');
-
-    $.ajax({
-      url: fullPath,
-      beforeSend: toggleLoader
-    })
-    .done(function(html) {
-      state += 1;
-     
-      $('html, body').animate({
-        scrollTop: $('#subheader').offset().top
-      }, 500, function() {
-        contentContainer.replaceWith(html);
-        setupFilters();
-        History.pushState({state: state}, 'state '+state, '?'+queryString);
-      });
-    })
-    .fail(function() {
-      contentContainer.html('Oops! something went wrong. Please try again')
-    }).always(toggleLoader);
   };
 
   // Filter handlers

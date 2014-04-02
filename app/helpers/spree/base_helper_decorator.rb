@@ -36,4 +36,20 @@ Spree::BaseHelper.class_eval do
   def params_taxon_ids 
     @params_taxon_ids ||= [params[:primary_taxon_id], params[:taxon_ids]].flatten.compact.map(&:to_i)
   end
+
+  def maximum_product_price
+    Spree::Price.maximum(:amount).to_i
+  end
+
+  def minimum_product_price
+    Spree::Price.minimum(:amount).to_i
+  end
+
+  def starting_product_price
+    params[:price] && params[:price][:min].to_i || minimum_product_price
+  end
+
+  def ending_product_price
+    params[:price] && params[:price][:max].to_i || maximum_product_price
+  end
 end

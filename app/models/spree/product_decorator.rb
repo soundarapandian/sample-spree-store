@@ -1,7 +1,22 @@
 Spree::Product.class_eval do
 
+  def self.searchable_properties
+    {
+      'shirts' => ['Brand', 'Gender', 'Manufacturer', 'Fit', 'Made From'],
+      't-shirts' => ['Brand', 'Gender', 'Manufacturer', 'Fit', 'Made From'],
+      'bags' => ['Type', 'Size', 'Material'],
+      'mugs' => ['Type', 'Size']
+    }
+  end
+
+  def self.searchable_variants
+    {
+      't-shirts' => ['Tshirt Color', 'Tshirt Size']
+    }
+  end
+
   searchable do
-    text :name, :description, stored: true
+    text :name, :description
 
     text :taxons do
       taxons.map(&:name).join(' ')
@@ -11,61 +26,26 @@ Spree::Product.class_eval do
       product_properties.map(&:value).join(' ')
     end
 
-    float :price, stored: true
+    float :price
     
     integer :taxon_ids, multiple: true
 
-    string :product_brand do
-       product_properties.joins(:property).where("spree_properties.name = 'Brand'").take.try(:value)
-    end
-
-    string :product_manufacturer do
-       product_properties.joins(:property).where("spree_properties.name = 'Manufacturer'").take.try(:value)
-    end
-
-    string :product_gender do
-       product_properties.joins(:property).where("spree_properties.name = 'Gender'").take.try(:value)
-    end
-
-    string :product_fit do
-      product_properties.joins(:property).where("spree_properties.name = 'Fit'").take.try(:value)
-    end
-
-    string :product_model do
-      product_properties.joins(:property).where("spree_properties.name = 'Model'").take.try(:value)
-    end
-
-    string :product_shirt_type do
-      product_properties.joins(:property).where("spree_properties.name = 'Shirt Type'").take.try(:value)
-    end
-
-    string :product_sleeve_type do
-      product_properties.joins(:property).where("spree_properties.name = 'Sleeve Type'").take.try(:value)
-    end
-
-    string :product_made_from do
-      product_properties.joins(:property).where("spree_properties.name = 'Made From'").take.try(:value)
-    end
-
-    string :product_tshirt_color, multiple: true do
-      option_type = Spree::OptionType.find_by(name: 'Tshirt Color')
-
-      if option_type
-        Spree::OptionValue.joins(:variants).
-          where('spree_variants.product_id = ? AND option_type_id = ?', send(:id), option_type.id).distinct.pluck(:name)
-      else
-        []
+    searchable_properties.values.flatten.uniq.each do |searchable_property|
+      string searchable_property.parameterize.underscore.to_sym do
+        product_properties.joins(:property).where('spree_properties.name = ?', searchable_property).take.try(:value)
       end
     end
 
-    string :product_tshirt_size, multiple: true do
-      option_type = Spree::OptionType.find_by(name: 'Tshirt Size')
+    searchable_variants.values.flatten.uniq.each do |searchable_variant|
+      string searchable_variant.parameterize.underscore.to_sym, multiple: true do
+        option_type = Spree::OptionType.find_by(name: searchable_variant)
 
-      if option_type
-        Spree::OptionValue.joins(:variants).
+        if option_type
+          Spree::OptionValue.joins(:variants).
             where('spree_variants.product_id = ? AND option_type_id = ?', send(:id), option_type.id).distinct.pluck(:name)
-      else
-        []
+        else
+          []
+        end
       end
     end
   end
