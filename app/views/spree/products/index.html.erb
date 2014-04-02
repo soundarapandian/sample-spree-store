@@ -1,0 +1,27 @@
+<% content_for :sidebar do %>
+  <div data-hook="homepage_sidebar_navigation">
+    <%= render :partial => 'spree/shared/filters' %>
+  </div>
+<% end %>
+
+
+<% if @ajax_request %>
+  <div id="wrapper" class="container">
+    <aside id="sidebar" class="columns four">
+      <div data-hook="homepage_sidebar_navigation">
+        <%= render :partial => 'spree/shared/filters' %>
+      </div>
+    </aside>
+    <div id="content" class="columns twelve omega">
+      <% if params[:keywords] %>
+        <%= render :partial => 'spree/shared/search_results' %>
+      <% else %>
+        <%= render :partial => 'spree/shared/homepage_products' %>
+      <% end %>
+    </div>
+  </div>
+<% elsif params[:keywords] %>
+  <%= render :partial => 'spree/shared/search_results' %>
+<% else %>
+  <%= render :partial => 'spree/shared/homepage_products' %>
+<% end %>

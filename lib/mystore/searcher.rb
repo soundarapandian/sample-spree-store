@@ -1,5 +1,10 @@
 module Mystore
   class Searcher
+    SEARCHABLE_PROPERTIES_AND_VARIANTS = [
+      'brand', 'gender', 'manufacturer', 'fit', 'model', 'shirt_type', 'sleeve_type', 'made_from',
+      'tshirt_size', 'tshirt_color'
+    ]
+
     attr_accessor :current_user
     attr_accessor :current_currency
     attr_reader :search
@@ -9,47 +14,24 @@ module Mystore
 
       @search = Spree::Product.solr_search do
         # Full text search
-        if params[:keywords].present?
-          fulltext params[:keywords] do
-            highlight :name, :description
-          end
-        end
+        fulltext params[:keywords] if params[:keywords].present?
 
         # Filter by taxonomy
-        if params[:taxon_ids].present?
-          params[:taxon_ids].each do |_,taxon_ids|
-            with :taxon_ids, taxon_ids.map(&:to_i)
-          end
-        end
+        with :taxon_ids, params[:primary_taxon_id].to_i if params[:primary_taxon_id].present?
+        with :taxon_ids, params[:taxon_ids].map(&:to_i) if params[:taxon_ids].present?
 
         # Filter by price
-        if params[:price].present?
-          with(:price, params[:price][:min].to_f..params[:price][:max].to_f)
-        end
+        with(:price, params[:price][:min].to_f..params[:price][:max].to_f) if params[:price].present?
         
-        # Filter by brand
-        if params[:brand_any].present?
-          any_of do
-            params[:brand_any].each do |brand|
-              with :product_brand, brand
-            end
-          end
-        end
+        # Filter by product properties and variants
+        SEARCHABLE_PROPERTIES_AND_VARIANTS.each do |search_field|
+          product_search_key = search_field + '_any'
 
-        # Filter by gender
-        if params[:gender_any].present?
-          any_of do
-            params[:gender_any].each do |gender|
-              with :product_gender, gender
-            end
-          end
-        end
-
-        # Filter by manufacturer
-        if params[:manufacturer_any].present?
-          any_of do
-            params[:manufacturer_any].each do |manufacturer|
-              with :product_manufacturer, manufacturer
+          if params[product_search_key].present?
+            any_of do
+              params[product_search_key].each do |product_search_value|
+                with ('product_' + search_field).to_sym, product_search_value
+              end
             end
           end
         end

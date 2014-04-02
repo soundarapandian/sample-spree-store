@@ -6,22 +6,34 @@ Spree::BaseHelper.class_eval do
     content_tag :ul, class: 'filter_choices' do
       root_taxon.children.map do |taxon|
         css_class = (current_taxon && current_taxon.self_and_ancestors.include?(taxon)) ? 'current' : nil
-        prodcuts_count = Spree::Product.joins(:taxons).where('spree_products_taxons.taxon_id = ?', taxon.id).count
+        filter_input = get_filter_input taxon
 
         content_tag :li, class: css_class do
-          taxon_id = taxon.id
-          
           if taxon.parent.present? && taxon.children.present?
             taxons_tree(taxon, current_taxon, max_level - 1)
           else
             [
-              check_box_tag("taxon_ids[#{@root_taxon_id}][]", taxon_id, false, id: "taxon-#{taxon_id}"),
-              content_tag(:label, taxon.name, for: "taxon-#{taxon_id}"),
-              content_tag(:span, "(#{prodcuts_count})")
+              filter_input,
+              content_tag(:label, taxon.name, for: "taxon-#{taxon.id}"),
+              content_tag(:span, "(#{taxon.products.count})")
             ].join(" ").html_safe
           end
         end 
       end.join("\n").html_safe
     end 
-  end 
+  end
+  
+  def get_filter_input(taxon)
+    taxon_id = taxon.id
+
+    if taxon.root.name == 'Categories'
+      radio_button_tag("primary_taxon_id", taxon_id, params_taxon_ids.include?(taxon_id), id: "taxon-#{taxon_id}")
+    else
+      check_box_tag("taxon_ids[]", taxon_id, params_taxon_ids.include?(taxon_id), id: "taxon-#{taxon_id}")
+    end
+  end
+
+  def params_taxon_ids 
+    @params_taxon_ids ||= [params[:primary_taxon_id], params[:taxon_ids]].flatten.compact.map(&:to_i)
+  end
 end

@@ -1,45 +1,23 @@
-<% filters = Spree::Taxon.new.applicable_filters %>
-<% unless filters.empty? %>
-  <%= form_tag '', :method => :get, :id => 'sidebar_products_search' do %>
-    <%= render 'spree/shared/taxonomies' %>
+<%= form_tag '', :method => :get, :id => 'sidebar_products_search' do %>
+  <%= render 'spree/shared/taxonomies' %>
 
-    <h6 class="filter-title">Price Range <span class="arrow up filter-collapse"></span></h6>
-    <div id="price">
-      <div class="price-range"></div>
-      <div class="price-min">
-        Min($): <input type="text" name="price[min]" id="min-price" class="price-min">
-      </div>
-      <div class="price-max">
-        Max($): <input type="text" name="price[max]" id="max-price" class="price-max">
-      </div>
+  <h6 class="filter-title">Price Range <span class="arrow up filter-collapse"></span></h6>
+  <div id="price">
+    <div class="price-range"></div>
+    <div class="price-min">
+      Min($): <input type="text" name="price[min]" id="min-price" class="price-min">
     </div>
+    <div class="price-max">
+      Max($): <input type="text" name="price[max]" id="max-price" class="price-max">
+    </div>
+  </div>
 
-    <% if params[:per_page].present? %>
-      <%= hidden_field_tag 'per_page', params[:per_page] %>
-    <% end %>
-    <% if params[:keywords].present? %>
-      <%= hidden_field_tag 'keywords', params[:keywords] %>
-    <% end %>
-
-    <% filters.each do |filter| %>
-      <% labels = filter[:labels] || filter[:conds].map {|m,c| [m,m]} %>
-      <% next if labels.empty? %>
-      <div class="navigation" data-hook="navigation">
-        <h6 class="filter-title"> <%= filter[:name] %> <span class="arrow up filter-collapse"></span></h6>
-        <ul class="filter_choices">
-          <% labels.each do |nm,val| %>
-            <% label = "#{filter[:name]}_#{nm}".gsub(/\s+/,'_') %>
-            <li class="nowrap">
-              <input type="checkbox"
-                     id="<%= label %>"
-                     name="<%= filter[:scope].to_s %>[]"
-                     value="<%= val %>"
-                     <%= params[filter[:scope]] && params[filter[:scope]].include?(val.to_s) ? "checked" : "" %> />
-              <label class="nowrap" for="<%= label %>"> <%= nm %> </label>
-            </li>
-          <% end %>
-        </ul>
-      </div>
-    <% end %>
+  <% if params[:per_page].present? %>
+    <%= hidden_field_tag 'per_page', params[:per_page] %>
   <% end %>
+  <% if params[:keywords].present? %>
+    <%= hidden_field_tag 'keywords', params[:keywords] %>
+  <% end %>
+
+  <%= render 'spree/shared/sub_filters', filters: @filters %>
 <% end %>

@@ -1,5 +1,0 @@
-search = Mystore::Product.solr_search do
-  fulltext 'spree' do
-    highlight :name, :description
-  end
-end
